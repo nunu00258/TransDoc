@@ -1,0 +1,24 @@
+#!/bin/bash
+yum update -y
+yum upgrade -y
+
+# Squid install
+yum install -y squid
+yum install -y https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm
+
+sudo aws s3 cp s3://iris-cfts-template/PX/squid.conf /etc/squid/squid.conf
+sudo aws s3 cp s3://iris-cfts-template/PX/blacklist /etc/squid/blacklist
+
+systemctl daemon-reload
+systemctl start squid
+systemctl enbale squid 
+
+# AccessLog rotation to CWL
+yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+yum install -y collectd
+
+/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+-a fetch-config \
+-m ec2 \
+-c ssm:AmazonCloudWatch-pxSquid \
+-s
